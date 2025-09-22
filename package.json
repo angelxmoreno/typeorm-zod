@@ -3,17 +3,26 @@
     "version": "0.1.0",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
-    "description": "",
-    "keywords": [],
+    "description": "Seamless integration between TypeORM entities and Zod validation using WeakMap-based metadata storage to prevent cross-entity pollution",
+    "keywords": [
+        "typeorm",
+        "zod",
+        "validation",
+        "typescript",
+        "decorators",
+        "schema",
+        "orm",
+        "database"
+    ],
     "author": "Angel S. Moreno <angelxmoreno@gmail.com> (https://angelxmoreno.github.io/)",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/angelxmoreno/bun-sqlite-search.git"
+        "url": "git+https://github.com/angelxmoreno/typeorm-zod.git"
     },
-    "homepage": "https://bun-sqlite-search.axmdev.app",
+    "homepage": "https://github.com/angelxmoreno/typeorm-zod#readme",
     "bugs": {
-        "url": "https://github.com/angelxmoreno/bun-sqlite-search/issues"
+        "url": "https://github.com/angelxmoreno/typeorm-zod/issues"
     },
     "files": [
         "dist",

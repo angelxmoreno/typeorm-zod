@@ -1,4 +1,4 @@
-# @repo/typeorm-zod
+# typeorm-zod
 
 Seamless integration between TypeORM entities and Zod validation using WeakMap-based metadata storage to prevent cross-entity pollution.
 
@@ -14,11 +14,11 @@ Seamless integration between TypeORM entities and Zod validation using WeakMap-b
 
 ## Quick Start
 
-With `@repo/typeorm-zod`, you define validation once and get comprehensive schemas:
+With `typeorm-zod`, you define validation once and get comprehensive schemas:
 
 ```typescript
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { ZodProperty, ZodColumn, createEntitySchemas } from '@repo/typeorm-zod';
+import { ZodProperty, ZodColumn, createEntitySchemas } from 'typeorm-zod';
 import { z } from 'zod';
 
 @Entity()
@@ -45,7 +45,13 @@ const userSchemas = createEntitySchemas(User);
 ## Installation
 
 ```bash
-bun add @repo/typeorm-zod
+npm install typeorm-zod
+# or
+bun add typeorm-zod
+# or
+yarn add typeorm-zod
+# or
+pnpm add typeorm-zod
 ```
 
 ### Inheritance Support
@@ -377,4 +383,12 @@ type CreateUserDto = z.infer<typeof CreateUserSchema>;
 
 ## License
 
-MIT
+MIT © [Angel S. Moreno](LICENSE)
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) to get started.
+
+## Code of Conduct
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md). Please read it to understand the expected behavior when participating in this project.
