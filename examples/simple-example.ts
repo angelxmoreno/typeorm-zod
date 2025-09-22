@@ -107,13 +107,14 @@ const createUser = (data: CreateUserDto) => {
     return data;
 };
 
-const sampleUser: CreateUserDto = {
+const sampleInput: z.input<typeof CreateUserSchema> = {
     name: 'TypeSafe User',
     apiKey: 'type-safe-key-456',
     // email is optional
     // isActive will use default value
 };
 
+const sampleUser: CreateUserDto = CreateUserSchema.parse(sampleInput);
 createUser(sampleUser);
 
 console.log('\n=== Example Complete ===');

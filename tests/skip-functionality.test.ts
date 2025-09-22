@@ -113,7 +113,7 @@ describe('Per-Property Skip Functionality', () => {
             }
         });
 
-        it('should reject create data with skipped fields', () => {
+        it('should strip skipped fields from create input', () => {
             const invalidCreateData = {
                 id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Should be skipped
                 title: 'Test Title',
@@ -123,7 +123,7 @@ describe('Per-Property Skip Functionality', () => {
             };
 
             const result = schemas.create.safeParse(invalidCreateData);
-
+            expect(result.success).toBe(true);
             if (result.success) {
                 // If parsing succeeds, the skipped fields should not be present
                 expect(result.data).not.toHaveProperty('id');

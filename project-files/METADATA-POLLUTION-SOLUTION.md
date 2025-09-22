@@ -66,17 +66,18 @@ All decorators executed during module loading, causing metadata to accumulate ac
  * WeakMap-based metadata storage that prevents cross-entity pollution
  * Each constructor function gets its own isolated metadata array
  */
-const metadataStore = new WeakMap<Function, ZodValidationMetadata[]>();
+const metadataStore = new WeakMap<object, ZodValidationMetadata[]>();
 
-export function getMetadata(constructor: Function): ZodValidationMetadata[] {
-    return metadataStore.get(constructor) || [];
+export function getMetadata(constructor: object): ReadonlyArray<ZodValidationMetadata> {
+    const arr = metadataStore.get(constructor) || [];
+    return arr.slice(); // defensive copy
 }
 
-export function setMetadata(constructor: Function, metadata: ZodValidationMetadata[]): void {
-    metadataStore.set(constructor, metadata);
+export function setMetadata(constructor: object, metadata: ZodValidationMetadata[]): void {
+    metadataStore.set(constructor, metadata.slice()); // avoid external mutation
 }
 
-export function addMetadata(constructor: Function, item: ZodValidationMetadata): void {
+export function addMetadata(constructor: object, item: ZodValidationMetadata): void {
     const existing = getMetadata(constructor);
     const updated = [...existing, item]; // Always create new array
     setMetadata(constructor, updated);

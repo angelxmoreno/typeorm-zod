@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { createEntitySchemas } from '../src';
 import { TestUserEntity } from './helpers/entities';
 
-describe(' @repo/typeorm-zod', () => {
+describe(' typeorm-zod', () => {
     const schemas = createEntitySchemas(TestUserEntity);
 
     it('should generate all schema variants', () => {

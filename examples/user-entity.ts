@@ -8,6 +8,7 @@ import { createEntitySchemas, ZodProperty } from '../src';
 
 // Mock AppEntity for this example (since we can't import from database package)
 class AppEntity {
+    @ZodProperty(z.string().uuid())
     id: string;
     createdAt: Date;
     updatedAt: Date;
@@ -109,7 +110,7 @@ try {
 // Test update validation
 try {
     const updateData = validateUpdateUser({
-        id: 'uuid-123',
+        id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
         name: 'John Updated',
     });
     console.log('✅ Update validation passed:', updateData);

@@ -9,9 +9,6 @@ import { addMetadata, hasPropertyMetadata } from '../metadata-store';
  */
 export function ZodColumn(columnOptions: ColumnOptions, zodSchema: z.ZodTypeAny) {
     return (target: object, propertyKey: string | symbol) => {
-        // Apply TypeORM @Column decorator
-        Column(columnOptions)(target, propertyKey);
-
         const constructorFunc = (target as { constructor: new (...args: unknown[]) => unknown }).constructor;
         const propertyKeyStr = String(propertyKey);
 
@@ -22,6 +19,9 @@ export function ZodColumn(columnOptions: ColumnOptions, zodSchema: z.ZodTypeAny)
                     'Multiple decorators on the same property are not supported. Please use only one decorator per property.'
             );
         }
+
+        // Apply TypeORM @Column decorator after duplicate check to avoid side effects
+        Column(columnOptions)(target, propertyKey);
 
         // Add metadata using WeakMap storage
         addMetadata(constructorFunc, {
