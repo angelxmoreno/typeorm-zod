@@ -1,0 +1,50 @@
+{
+    "name": "typeorm-zod",
+    "version": "0.1.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "description": "",
+    "keywords": [],
+    "author": "Angel S. Moreno <angelxmoreno@gmail.com> (https://angelxmoreno.github.io/)",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/angelxmoreno/bun-sqlite-search.git"
+    },
+    "homepage": "https://bun-sqlite-search.axmdev.app",
+    "bugs": {
+        "url": "https://github.com/angelxmoreno/bun-sqlite-search/issues"
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE",
+        "CONTRIBUTING.md",
+        "CODE_OF_CONDUCT.md"
+    ],
+    "scripts": {
+        "build": "rm -rf dist && tsc",
+        "check-types": "tsc --project tsconfig.test.json",
+        "lint": "biome check .",
+        "lint:fix": "biome check --write",
+        "test": "bun test",
+        "test:coverage": "bun test --coverage",
+        "release": "release-it"
+    },
+    "dependencies": {
+        "reflect-metadata": "^0.2.2",
+        "typeorm": "^0.3.26",
+        "zod": "^3.25.76"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.2.4",
+        "@commitlint/cli": "^19.8.1",
+        "@commitlint/config-conventional": "^19.8.1",
+        "@release-it/conventional-changelog": "^10.0.1",
+        "@types/bun": "^1.2.22",
+        "@types/node": "^24.3.0",
+        "lefthook": "^1.13.1",
+        "release-it": "^19.0.5",
+        "typescript": "^5.9.2"
+    }
+}
