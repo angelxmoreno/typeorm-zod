@@ -17,6 +17,7 @@
     },
     "hooks": {
         "before:init": ["bun run lint:fix", "bun run lint", "bun run check-types", "bun test"],
-        "after:bump": ["bun run lint:fix"]
+        "after:bump": ["bun run lint:fix"],
+        "before:release": "bun run build"
     }
 }
