@@ -39,6 +39,9 @@ async function loadConfig(configPath: string): Promise<CodegenConfig> {
         try {
             // Dynamically import the config file
             // Use a timestamp to bust module cache, important for watch mode
+            // Clear require.cache for the config file to ensure it's reloaded
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete require.cache[require.resolve(absoluteConfigPath)];
             const module = await import(`${absoluteConfigPath}?t=${Date.now()}`);
             loadedConfig = module.default || module;
         } catch (error) {
@@ -123,36 +126,47 @@ function debounce<T extends (...args: unknown[]) => unknown>(func: T, wait: numb
 }
 
 async function main() {
-    const config = await loadConfig(cliOptions.config);
+    // Initial config load
+    let currentConfig = await loadConfig(cliOptions.config);
 
-    if (!config.silent) {
-        console.log('Final Codegen Configuration:', config);
+    if (!currentConfig.silent) {
+        console.log('Final Codegen Configuration:', currentConfig);
     }
 
-    if (config.watch) {
-        if (!config.silent) {
+    if (currentConfig.watch) {
+        if (!currentConfig.silent) {
             console.log('Watch mode enabled. Waiting for changes to entity files...');
         }
 
-        const debouncedGenerate = debounce(() => generate(config), 300);
+        const configFilePath = path.resolve(process.cwd(), cliOptions.config);
+
+        const debouncedGenerate = debounce(async () => {
+            // Reload config on each regeneration
+            currentConfig = await loadConfig(cliOptions.config);
+            if (!currentConfig.silent) {
+                console.log('Configuration reloaded.');
+            }
+            await generate(currentConfig);
+        }, 300);
 
         chokidar
-            .watch(config.entities, {
+            .watch([currentConfig.entities, configFilePath], {
+                // Watch entities and config file
                 ignored: ['node_modules', 'dist', '**/*/index.ts'],
                 persistent: true,
                 ignoreInitial: true, // Don't trigger on startup
             })
             .on('all', (event, path) => {
-                if (!config.silent) {
+                if (!currentConfig.silent) {
                     console.log(`File ${path} ${event}, regenerating...`);
                 }
                 debouncedGenerate();
             });
 
         // Perform an initial generation on startup
-        await generate(config);
+        await generate(currentConfig);
     } else {
-        await generate(config);
+        await generate(currentConfig);
     }
 }
 
