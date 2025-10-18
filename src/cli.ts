@@ -1,4 +1,5 @@
 import 'reflect-metadata'; // Must be imported before any entity classes
+import { constants as FS_CONSTANTS } from 'node:fs'; // Import constants from node:fs
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as process from 'node:process';
@@ -28,7 +29,7 @@ async function loadConfig(configPath: string): Promise<CodegenConfig> {
     let configFileFound = false;
 
     try {
-        await fs.access(absoluteConfigPath, fs.constants.F_OK);
+        await fs.access(absoluteConfigPath, FS_CONSTANTS.F_OK); // Use FS_CONSTANTS.F_OK
         configFileFound = true;
     } catch (_error) {
         // File does not exist, proceed with default config
