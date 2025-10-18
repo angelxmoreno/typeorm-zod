@@ -12,6 +12,24 @@ Seamless integration between TypeORM entities and Zod validation using WeakMap-b
 - **TypeORM Integration**: Seamless integration with existing TypeORM decorators
 - **Production Ready**: Comprehensive error handling and validation
 
+## Code Generation (Codegen)
+
+To further enhance developer experience and ensure perfect type safety, `typeorm-zod` now includes a powerful Code Generation (Codegen) feature. This feature automatically generates centralized schema files, static TypeScript type definitions (DTOs), and validation helper functions directly from your decorated entities.
+
+### Benefits of Codegen:
+- **Eliminates `z.infer` limitations**: Provides true static type definitions for your DTOs, enabling full IDE autocompletion and compile-time type checking.
+- **Single Source of Truth**: All schemas, types, and validators are exported from a single generated file.
+- **Automated Boilerplate**: Reduces manual schema and type definition, especially for complex entities and multiple schema variants.
+- **Seamless Integration**: Generated types and validators are ready for use in API routes, service layers, and frontend applications.
+
+### How to Use Codegen:
+
+1.  **Create a Configuration File**: Define `typeorm-zod.codegen.config.ts` (or `.js`) in your project root. This file specifies entity locations, output paths, and custom naming conventions.
+2.  **Run the Codegen CLI**: Execute `bun run codegen` (or `npm run codegen`, `yarn codegen`) to generate the schema and type file.
+3.  **Integrate into Workflow**: Add the `codegen` command to your build pipeline (e.g., pre-build script) and consider using `--watch` mode during development.
+
+For detailed configuration, examples, and advanced usage, please refer to the [Code Generation Feature Documentation](project-files/CODEGEN.md).
+
 ## Quick Start
 
 With `typeorm-zod`, you define validation once and get comprehensive schemas:

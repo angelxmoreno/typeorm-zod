@@ -35,32 +35,75 @@ Instead of manually calling `createEntitySchemas()` throughout your codebase, th
 
 ## Generated Structure
 
-The codegen creates a comprehensive schema file with the following structure:
+The codegen creates a comprehensive schema file with the following structure. It works by running the `createEntitySchemas` function at generation-time, inspecting the runtime shape of the resulting Zod objects, and then writing the static TypeScript types to a file.
 
 ```typescript
 // Entity Schema Collections
 export const UserSchemas = createEntitySchemas(UserEntity);
 export const NoteSchemas = createEntitySchemas(NoteEntity);
-// ... all other entities
+// ... all other entity schemas
 
-// TypeScript Types
-export type User = z.infer<typeof UserSchemas.full>;
-export type CreateUserDto = z.infer<typeof UserSchemas.create>;
-export type UpdateUserDto = z.infer<typeof UserSchemas.update>;
-// ... all variants for all entities
+// TypeScript Types (Statically Generated)
+export type User = {
+    id: string;
+    name: string;
+    apiKey: string;
+    email?: string | undefined;
+    isActive?: boolean | undefined;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+};
+export type CreateUserDto = {
+    name: string;
+    apiKey: string;
+    email?: string | undefined;
+    isActive?: boolean | undefined;
+};
+export type UpdateUserDto = {
+    id: string;
+    name?: string | undefined;
+    apiKey?: string | undefined;
+    email?: string | undefined | undefined;
+    isActive?: boolean | undefined;
+    createdAt?: Date | undefined;
+    updatedAt?: Date | undefined;
+    deletedAt?: Date | null | undefined | null;
+};
+export type PatchUserDto = {
+    id?: string | undefined;
+    name?: string | undefined;
+    apiKey?: string | undefined;
+    email?: string | undefined | undefined;
+    isActive?: boolean | undefined;
+    createdAt?: Date | undefined;
+    updatedAt?: Date | undefined;
+    deletedAt?: Date | null | undefined | null;
+};
+export type UserQueryDto = {
+    id?: string | undefined;
+    name?: string | undefined;
+    apiKey?: string | undefined;
+    email?: string | undefined | undefined;
+    isActive?: boolean | undefined;
+    createdAt?: Date | undefined;
+    updatedAt?: Date | undefined;
+    deletedAt?: Date | null | undefined | null;
+};
+// ... other DTOs for other entities
 
 // Validation Helpers
-export const validateCreateUser = (data: unknown): CreateUserDto => 
-    UserSchemas.create.parse(data);
-export const validateUpdateUser = (data: unknown): UpdateUserDto => 
-    UserSchemas.update.parse(data);
-// ... all validators for all entities
+export const validateCreateUser = (data: unknown): CreateUserDto => UserSchemas.create.parse(data);
+export const validateUpdateUser = (data: unknown): UpdateUserDto => UserSchemas.update.parse(data);
+export const validatePatchUser = (data: unknown): PatchUserDto => UserSchemas.patch.parse(data);
+export const validateQueryUser = (data: unknown): UserQueryDto => UserSchemas.query.parse(data);
+// ... other validators for other entities
 
 // Convenience Exports
 export const AllSchemas = {
     User: UserSchemas,
-    Note: NoteSchemas,
-    // ... all schemas
+    Note: NoteSchemas, // Example for another entity
+    // ... all other schemas
 } as const;
 ```
 
@@ -197,73 +240,79 @@ describe('Note Operations', () => {
 });
 ```
 
+## CLI Interface
+
+The codegen tool will be invoked via a CLI command, primarily using a configuration file for detailed settings. Command-line options can be used to override specific settings from the configuration file.
+
+| Option | Alias | Type | Description |
+| :--- | :--- | :--- | :--- |
+| `--config <path>` | `-c` | `string` | Specifies the path to the codegen configuration file. Defaults to `typeorm-zod.codegen.config.ts` in the project root. |
+| `--watch` | `-w` | `boolean`| Runs in watch mode, automatically regenerating the file when entities change. This flag overrides the `watch` setting in the configuration file. |
+| `--help` | `-h` | `boolean`| Displays the help menu. |
+
 ## Configuration
 
-### Directory Structure
-
-The codegen expects your entities to be organized as follows:
-
-```
-packages/database/src/
-├── entities/
-│   ├── UserEntity.ts
-│   ├── NoteEntity.ts
-│   ├── WorkspaceEntity.ts
-│   └── ... other entities
-├── entity-schema-types.ts  # Generated file
-└── index.ts               # Re-exports schemas
-```
-
-### Entity Requirements
-
-All entities must:
-
-1. **Use `@ZodProperty` or `@ZodColumn` decorators** on properties you want in schemas
-2. **Export the class** with a descriptive name ending in "Entity"
-3. **Follow consistent naming patterns** for predictable type generation
+The codegen's behavior is primarily controlled by a configuration file, typically named `typeorm-zod.codegen.config.ts` (or `.js`) in your project root. This file should export a default configuration object.
 
 ```typescript
-// ✅ Good - will be detected and included
-@Entity('users')
-export class UserEntity extends AppEntity {
-    @ZodColumn({ type: 'varchar', length: 255 }, z.string().min(1).max(255))
-    name: string;
-}
+// typeorm-zod.codegen.config.ts
+import { CodegenConfig } from 'typeorm-zod/codegen'; // Assuming a type definition for the config
 
-// ❌ Bad - won't be detected
-class User {  // Not exported or missing Entity suffix
-    name: string;  // No Zod decorator
-}
+const config: CodegenConfig = {
+    // Glob pattern for discovering entity files
+    entities: 'src/entities/**/*.ts',
+
+    // Output path for the generated schema and type file
+    output: 'src/generated/entity-schemas.ts',
+
+    // Run in watch mode (overridable by CLI --watch flag)
+    watch: false,
+
+    // Suppress all console output except errors
+    silent: false,
+
+    // Custom naming conventions for generated types and DTOs
+    naming: {
+        // Function to convert entity class name to full type name (e.g., UserEntity -> User)
+        entityToTypeName: (entityName: string) => entityName.replace('Entity', ''),
+        // Function to convert entity class name to Create DTO name (e.g., UserEntity -> CreateUserDto)
+        entityToCreateDtoName: (entityName: string) => `Create${entityName.replace('Entity', '')}Dto`,
+        // Function to convert entity class name to Update DTO name (e.g., UserEntity -> UpdateUserDto)
+        entityToUpdateDtoName: (entityName: string) => `Update${entityName.replace('Entity', '')}Dto`,
+        // ... other naming rules for Patch, Query, Schemas, Validators
+    },
+
+    // Options for schema generation (e.g., default fields to omit)
+    schemas: {
+        // Default fields to omit from 'create' schemas across all entities
+        defaultOmitFromCreate: ['id', 'createdAt', 'updatedAt', 'deletedAt'],
+        // Per-entity overrides or additional options
+        entityOverrides: {
+            UserEntity: {
+                omitFromCreate: ['internalId'], // Additional fields to omit for UserEntity's create schema
+                transforms: {
+                    email: (schema) => schema.transform(val => val.toLowerCase()),
+                },
+            },
+        },
+    },
+};
+
+export default config;
 ```
-
-### Generated Naming Conventions
-
-The codegen follows consistent naming patterns:
-
-| Pattern | Example |
-|---------|---------|
-| Entity Class | `UserEntity` |
-| Schema Collection | `UserSchemas` |
-| Full Type | `User` |
-| Create DTO | `CreateUserDto` |
-| Update DTO | `UpdateUserDto` |  
-| Patch DTO | `PatchUserDto` |
-| Query DTO | `UserQueryDto` |
-| Validator Functions | `validateCreateUser`, `validateUpdateUser`, etc. |
-
 ## Implementation Plan
 
 ### Phase 1: Core Generator
-- [ ] Create entity discovery system (scan `/entities` directory)
-- [ ] Build schema generation templates
-- [ ] Implement file writing with proper formatting
-- [ ] Add TypeScript type generation
-- [ ] Create validation helper generation
+- [x] Create entity discovery system (scan `/entities` directory)
+- [x] Build schema generation templates
+- [x] Implement file writing with proper formatting
+- [x] Add TypeScript type generation
+- [x] Create validation helper generation
 
 ### Phase 2: CLI Integration  
-- [ ] Add `bun run codegen:schemas` command
-- [ ] Integrate with existing build pipeline
-- [ ] Add watch mode for development
+- [x] Add `bun run codegen` command (previously `codegen:schemas`)
+- [x] Integrate with existing build pipeline
+- [x] Add watch mode for development
 - [ ] Create pre-commit hooks for auto-generation
 
 ### Phase 3: Advanced Features
