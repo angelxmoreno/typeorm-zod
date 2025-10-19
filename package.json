@@ -31,8 +31,11 @@
         "CONTRIBUTING.md",
         "CODE_OF_CONDUCT.md"
     ],
+    "bin": {
+        "typeorm-zod-codegen": "./dist/cli.js"
+    },
     "scripts": {
-        "build": "rm -rf dist && tsc",
+        "build": "rm -rf dist && tsc && echo '#!/usr/bin/env bun' | cat - dist/cli.js > temp && mv temp dist/cli.js",
         "check-types": "bun run codegen && tsc --project tsconfig.test.json",
         "lint": "biome check .",
         "lint:fix": "biome check --write",

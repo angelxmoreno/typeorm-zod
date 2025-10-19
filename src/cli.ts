@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import 'reflect-metadata'; // Must be imported before any entity classes
 import { constants as FS_CONSTANTS } from 'node:fs'; // Import constants from node:fs
 import * as fs from 'node:fs/promises';
