@@ -1,5 +1,12 @@
 # Changelog
 
+# [0.3.0](https://github.com/angelxmoreno/typeorm-zod/compare/v0.2.0...v0.3.0) (2025-10-19)
+
+
+### Features
+
+* properly expose codegen CLI for npm users ([6d2b843](https://github.com/angelxmoreno/typeorm-zod/commit/6d2b843eba822caf80681fe7b91a58dad7bf9e62))
+
 # [0.2.0](https://github.com/angelxmoreno/typeorm-zod/compare/v0.1.2...v0.2.0) (2025-10-19)
 
 
