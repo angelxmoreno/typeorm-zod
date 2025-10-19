@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'node:url';
+
 // Define a type for an entity class constructor
 export type EntityClass = new (...args: unknown[]) => unknown;
 
@@ -23,7 +25,9 @@ export async function loadEntityClasses(filePaths: string[]): Promise<Array<[str
     for (const filePath of filePaths) {
         try {
             // Use a timestamp to bust module cache, important for watch mode
-            const module = await import(`${filePath}?t=${Date.now()}`);
+            const url = pathToFileURL(filePath);
+            url.searchParams.set('t', String(Date.now()));
+            const module = await import(url.href);
 
             let foundEntityClass: EntityClass | undefined;
             let foundEntityName: string | undefined;

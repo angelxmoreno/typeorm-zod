@@ -3,6 +3,7 @@ import { constants as FS_CONSTANTS } from 'node:fs'; // Import constants from no
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import chokidar from 'chokidar';
 import { Command } from 'commander';
 import { type CodegenConfig, CodegenConfigSchema } from './codegen/config';
@@ -37,12 +38,10 @@ async function loadConfig(configPath: string): Promise<CodegenConfig> {
 
     if (configFileFound) {
         try {
-            // Dynamically import the config file
-            // Use a timestamp to bust module cache, important for watch mode
-            // Clear require.cache for the config file to ensure it's reloaded
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete require.cache[require.resolve(absoluteConfigPath)];
-            const module = await import(`${absoluteConfigPath}?t=${Date.now()}`);
+            // Dynamically import the config file with cache-busting in ESM-compatible way
+            const url = pathToFileURL(absoluteConfigPath);
+            url.searchParams.set('t', String(Date.now()));
+            const module = await import(url.href);
             loadedConfig = module.default || module;
         } catch (error) {
             console.error(`Error loading configuration file ${absoluteConfigPath}:`, error);
@@ -149,12 +148,13 @@ async function main() {
             await generate(currentConfig);
         }, 300);
 
+        const watchPaths = [path.dirname(currentConfig.entities.split('*')[0] || 'src/entities'), configFilePath];
         chokidar
-            .watch([currentConfig.entities, configFilePath], {
-                // Watch entities and config file
-                ignored: ['node_modules', 'dist', '**/*/index.ts'],
+            .watch(watchPaths, {
                 persistent: true,
-                ignoreInitial: true, // Don't trigger on startup
+                ignoreInitial: true,
+                ignored: (_p: string) => /node_modules|\/dist\/|index\.ts$/.test(_p),
+                awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 100 },
             })
             .on('all', (event, path) => {
                 if (!currentConfig.silent) {
