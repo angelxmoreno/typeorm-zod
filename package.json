@@ -1,6 +1,6 @@
 {
     "name": "typeorm-zod",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "description": "Seamless integration between TypeORM entities and Zod validation using WeakMap-based metadata storage to prevent cross-entity pollution",
