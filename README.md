@@ -25,7 +25,25 @@ To further enhance developer experience and ensure perfect type safety, `typeorm
 ### How to Use Codegen:
 
 1.  **Create a Configuration File**: Define `typeorm-zod.codegen.config.ts` (or `.js`) in your project root. This file specifies entity locations, output paths, and custom naming conventions.
-2.  **Run the Codegen CLI**: Execute `bun run codegen` (or `npm run codegen`, `yarn codegen`) to generate the schema and type file.
+2.  **Run the Codegen CLI**:
+    *   If you have installed `typeorm-zod` as a dependency, you can run the CLI using `npx`:
+        ```bash
+        npx typeorm-zod-codegen
+        ```
+    *   Alternatively, you can add a script to your `package.json` to run the codegen:
+        ```json
+        "scripts": {
+            "codegen": "typeorm-zod-codegen"
+        }
+        ```
+        Then, you can execute it using your package manager:
+        ```bash
+        npm run codegen
+        # or
+        bun run codegen
+        # or
+        yarn codegen
+        ```
 3.  **Integrate into Workflow**: Add the `codegen` command to your build pipeline (e.g., pre-build script) and consider using `--watch` mode during development.
 
 For detailed configuration, examples, and advanced usage, please refer to the [Code Generation Feature Documentation](project-files/CODEGEN.md).
