@@ -33,12 +33,13 @@
     ],
     "scripts": {
         "build": "rm -rf dist && tsc",
-        "check-types": "tsc --project tsconfig.test.json",
+        "check-types": "bun run codegen && tsc --project tsconfig.test.json",
         "lint": "biome check .",
         "lint:fix": "biome check --write",
         "test": "bun test",
         "test:coverage": "bun test --coverage",
-        "release": "release-it"
+        "release": "release-it",
+        "codegen": "bun run src/cli.ts"
     },
     "dependencies": {
         "reflect-metadata": "^0.2.2",
@@ -52,8 +53,14 @@
         "@release-it/conventional-changelog": "^10.0.1",
         "@types/bun": "^1.2.22",
         "@types/node": "^24.3.0",
+        "chokidar": "^4.0.3",
+        "commander": "^14.0.1",
+        "fast-glob": "^3.3.3",
         "lefthook": "^1.13.1",
         "release-it": "^19.0.5",
         "typescript": "^5.9.2"
+    },
+    "engines": {
+        "node": ">=20"
     }
 }
