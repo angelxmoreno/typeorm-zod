@@ -7,7 +7,7 @@ export type EntityClass = new (...args: unknown[]) => unknown;
  * @returns True if the value is a class constructor, false otherwise.
  */
 function isClass(value: unknown): value is EntityClass {
-    return typeof value === 'function' && /^S*classS* /.test(value.toString());
+    return typeof value === 'function' && /^\s*class\b/.test(Function.prototype.toString.call(value));
 }
 
 /**
@@ -28,8 +28,13 @@ export async function loadEntityClasses(filePaths: string[]): Promise<Array<[str
             let foundEntityClass: EntityClass | undefined;
             let foundEntityName: string | undefined;
 
+            const exportNames = Object.keys(module);
+            const preferredExportNames = [
+                ...new Set([...exportNames.filter((name) => name.endsWith('Entity')), ...exportNames]),
+            ];
+
             // Prioritize named exports that are classes
-            for (const exportName of Object.keys(module)) {
+            for (const exportName of preferredExportNames) {
                 const exported = module[exportName];
                 if (isClass(exported) && exported.name) {
                     foundEntityClass = exported;

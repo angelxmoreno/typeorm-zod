@@ -37,9 +37,12 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny): string {
     } else if (zodSchema instanceof z.ZodDate) {
         return 'Date';
     } else if (zodSchema instanceof z.ZodArray) {
-        return `Array<${zodSchemaToTypeScriptType(zodSchema.element)}>`;
+        // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod properties
+        const el = (zodSchema as any)?._def?.type ?? (zodSchema as any)?.element;
+        return `Array<${zodSchemaToTypeScriptType(el as z.ZodTypeAny)}>`;
     } else if (zodSchema instanceof z.ZodObject) {
-        const shape = zodSchema.shape;
+        // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod properties
+        const shape = (zodSchema as any).shape ?? (zodSchema as any)._def?.shape?.();
         const properties = Object.keys(shape)
             .map((key) => {
                 const propSchema = shape[key];
@@ -68,7 +71,9 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny): string {
     } else if (zodSchema instanceof z.ZodLiteral) {
         return typeof zodSchema.value === 'string' ? `'${zodSchema.value}'` : String(zodSchema.value);
     } else if (zodSchema instanceof z.ZodUnion) {
-        return zodSchema.options.map((opt: z.ZodTypeAny) => zodSchemaToTypeScriptType(opt)).join(' | '); // Explicitly typed opt
+        // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod properties
+        const opts: z.ZodTypeAny[] = (zodSchema as any)?._def?.options ?? (zodSchema as any)?.options ?? [];
+        return opts.map((opt) => zodSchemaToTypeScriptType(opt)).join(' | ');
     } else if (zodSchema instanceof z.ZodAny) {
         return 'any';
     } else if (zodSchema instanceof z.ZodUnknown) {
@@ -105,21 +110,27 @@ export function generateSchemasAndTypes(
     let output = '// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.\n\n';
     output += '// @ts-ignore: `z` is used indirectly by `createEntitySchemas`\n'; // Suppress unused z warning
     output += 'import { z } from "zod";\n';
-    // Dynamically determine the relative path to the project's src directory
     const outputFilePath: string = config.output; // Ensure it's a string
     const absoluteOutputDirectory = path.resolve(process.cwd(), path.dirname(outputFilePath));
-    const relativePathToSrc = path.relative(absoluteOutputDirectory, path.resolve(__dirname, '../../src'));
-    output += `import { createEntitySchemas } from './${relativePathToSrc}';\n\n`;
+    const relativePathToSrcIndex = path.relative(absoluteOutputDirectory, path.resolve(__dirname, '../../src/index'));
+    const toPosix = (p: string) => p.replace(/\\/g, '/');
+    output += `import { createEntitySchemas } from './${toPosix(relativePathToSrcIndex)}';\n\n`;
 
     // Generate imports for entity classes
-    entityClasses.forEach(([className], index) => {
-        const entityFilePath = entityFilePaths[index] as string; // Explicitly cast to string
-        // Ensure config.output is a string before passing to path.dirname
-        const outputDir = path.resolve(process.cwd(), path.dirname(outputFilePath)); // Resolve to absolute path
-        const relativePath = path.relative(outputDir, entityFilePath as string); // Explicitly cast to string
+    for (const [className, _classConstructor] of entityClasses) {
+        // Find the source file for this class by searching through the loaded modules
+        const outputDir = path.resolve(process.cwd(), path.dirname(outputFilePath));
+        // Map className back to its file path from the resolution process
+        const entityFilePath = entityFilePaths.find((filePath) => {
+            // Extract class name from file path for matching (simple heuristic)
+            const fileName = path.basename(filePath, '.ts');
+            return fileName.toLowerCase().includes(className.toLowerCase());
+        });
+        if (!entityFilePath) continue;
+        const relativePath = path.relative(outputDir, entityFilePath).replace(/\\/g, '/');
         const importPath = `./${relativePath.replace(/\.ts$/, '')}`;
         output += `import { ${className} } from '${importPath}';\n`;
-    });
+    }
     output += '\n';
 
     const generatedSchemas: GeneratedSchema[] = [];
@@ -157,11 +168,12 @@ export function generateSchemasAndTypes(
             validateQueryFnName,
         });
 
-        // Generate schema collections
-        output += `export const ${schemasVarName} = createEntitySchemas(${className});\n`;
+        const overrides = config.schemas?.entityOverrides?.[className];
+        const overridesString = overrides ? JSON.stringify(overrides) : 'undefined';
+        output += `export const ${schemasVarName} = createEntitySchemas(${className}, ${overridesString});\n`;
 
         // Generate TypeScript types by inspecting the Zod schemas
-        const entitySchemas = createEntitySchemas(classConstructor, config.schemas?.entityOverrides?.[className]);
+        const entitySchemas = createEntitySchemas(classConstructor, overrides);
 
         output += `export type ${fullTypeName} = ${zodSchemaToTypeScriptType(entitySchemas.full)};\n`;
         output += `export type ${createDtoName} = ${zodSchemaToTypeScriptType(entitySchemas.create)};\n`;

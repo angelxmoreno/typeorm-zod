@@ -56,11 +56,11 @@ describe('Codegen Core Logic', () => {
         // Basic checks for generated content structure
         expect(generatedContent).toContain('// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.');
         expect(generatedContent).toContain('import { z } from "zod";');
-        expect(generatedContent).toContain(`import { createEntitySchemas } from './..';`); // Updated to relative path
+        expect(generatedContent).toContain(`import { createEntitySchemas } from './../index';`);
 
         // Check for specific entity schemas and types
         expect(generatedContent).toContain(
-            'export const TestEntityLegacySchemas = createEntitySchemas(TestEntityLegacy);'
+            'export const TestEntityLegacySchemas = createEntitySchemas(TestEntityLegacy, undefined);'
         );
         expect(generatedContent).toContain('export type MyTestLegacy = {');
         expect(generatedContent).toContain('export type CreateTestEntityLegacyDto = {');
@@ -68,7 +68,9 @@ describe('Codegen Core Logic', () => {
             'export const validateCreateTestEntityLegacy = (data: unknown): CreateTestEntityLegacyDto => TestEntityLegacySchemas.create.parse(data) as CreateTestEntityLegacyDto;'
         ); // Updated assertion
 
-        expect(generatedContent).toContain('export const TestUserSchemas = createEntitySchemas(TestUserEntity);');
+        expect(generatedContent).toContain(
+            'export const TestUserSchemas = createEntitySchemas(TestUserEntity, undefined);'
+        );
         expect(generatedContent).toContain('export type MyTestUser = {');
         expect(generatedContent).toContain('export type CreateTestUserDto = {');
         expect(generatedContent).toContain(
