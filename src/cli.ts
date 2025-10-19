@@ -138,6 +138,7 @@ async function main() {
         }
 
         const configFilePath = path.resolve(process.cwd(), cliOptions.config);
+        const outputAbs = path.resolve(process.cwd(), currentConfig.output);
 
         const debouncedGenerate = debounce(async () => {
             // Reload config on each regeneration
@@ -153,12 +154,21 @@ async function main() {
             .watch(watchPaths, {
                 persistent: true,
                 ignoreInitial: true,
-                ignored: (_p: string) => /node_modules|\/dist\/|index\.ts$/.test(_p),
+                // Cross‑platform ignores and exclude the generated output file
+                ignored: (p: string) => {
+                    const norm = p.replace(/\\/g, '/');
+                    return (
+                        norm.includes('/node_modules/') ||
+                        norm.includes('/dist/') ||
+                        /(^|[\\/])index\\.ts$/.test(p) ||
+                        path.resolve(p) === outputAbs
+                    );
+                },
                 awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 100 },
             })
-            .on('all', (event, path) => {
+            .on('all', (event, changedPath) => {
                 if (!currentConfig.silent) {
-                    console.log(`File ${path} ${event}, regenerating...`);
+                    console.log(`File ${changedPath} ${event}, regenerating...`);
                 }
                 debouncedGenerate();
             });

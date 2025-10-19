@@ -59,5 +59,8 @@
         "lefthook": "^1.13.1",
         "release-it": "^19.0.5",
         "typescript": "^5.9.2"
+    },
+    "engines": {
+        "node": ">=20"
     }
 }
