@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/angelxmoreno/typeorm-zod/compare/v0.3.0...v0.3.1) (2025-10-20)
+
+
+### Bug Fixes
+
+* fixed various CLI issues ([cf28dfc](https://github.com/angelxmoreno/typeorm-zod/commit/cf28dfc4efdcca443220da6aac798f492b562eb5))
+
 # [0.3.0](https://github.com/angelxmoreno/typeorm-zod/compare/v0.2.0...v0.3.0) (2025-10-19)
 
 
