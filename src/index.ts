@@ -12,6 +12,8 @@
  * - Automatic create/update/patch schema variants
  */
 
+// Codegen types
+export type { CodegenConfig } from './codegen/config';
 // Metadata types
 export { type SchemaVariant, ZOD_METADATA_KEY, type ZodValidationMetadata } from './decorators/metadata';
 export { ZodColumn } from './decorators/zod-column';

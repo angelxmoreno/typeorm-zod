@@ -53,17 +53,24 @@ function getAllMetadata(
         const metadata = getMetadata(currentClass);
 
         // Add metadata from current class (child properties override parent properties)
-        metadata.forEach((item) => {
-            if (!seenProperties.has(item.propertyKey)) {
-                allMetadata.push({
-                    propertyKey: item.propertyKey,
-                    zodSchema: item.zodSchema,
-                    columnOptions: item.columnOptions,
-                    skip: item.skip,
-                });
-                seenProperties.add(item.propertyKey);
+        metadata.forEach(
+            (item: {
+                propertyKey: string;
+                zodSchema: z.ZodTypeAny;
+                columnOptions?: unknown;
+                skip?: SchemaVariant[];
+            }) => {
+                if (!seenProperties.has(item.propertyKey)) {
+                    allMetadata.push({
+                        propertyKey: item.propertyKey,
+                        zodSchema: item.zodSchema,
+                        columnOptions: item.columnOptions,
+                        skip: item.skip,
+                    });
+                    seenProperties.add(item.propertyKey);
+                }
             }
-        });
+        );
 
         // Move to parent class
         currentClass = Object.getPrototypeOf(currentClass);

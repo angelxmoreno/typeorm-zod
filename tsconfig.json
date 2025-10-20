@@ -25,7 +25,10 @@
         "outDir": "dist",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "paths": {
+            "typeorm-zod": ["./src/index.ts"]
+        }
     },
     "include": ["src/**/*"],
     "exclude": ["dist", "node_modules", "src/generated"]

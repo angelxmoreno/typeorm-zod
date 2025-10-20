@@ -1,4 +1,4 @@
-import type { CodegenConfig } from './src/codegen/config';
+import type { CodegenConfig } from './src';
 
 const config: CodegenConfig = {
     entities: './tests/helpers/entities/**/*.ts',

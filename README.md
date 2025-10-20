@@ -14,6 +14,11 @@ Seamless integration between TypeORM entities and Zod validation using WeakMap-b
 
 ## Code Generation (Codegen)
 
+**Requirements**: The codegen CLI requires [Bun](https://bun.sh) to be installed:
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
 To further enhance developer experience and ensure perfect type safety, `typeorm-zod` now includes a powerful Code Generation (Codegen) feature. This feature automatically generates centralized schema files, static TypeScript type definitions (DTOs), and validation helper functions directly from your decorated entities.
 
 ### Benefits of Codegen:
@@ -26,9 +31,9 @@ To further enhance developer experience and ensure perfect type safety, `typeorm
 
 1.  **Create a Configuration File**: Define `typeorm-zod.codegen.config.ts` (or `.js`) in your project root. This file specifies entity locations, output paths, and custom naming conventions.
 2.  **Run the Codegen CLI**:
-    *   If you have installed `typeorm-zod` as a dependency, you can run the CLI using `npx`:
+    *   Run the CLI using `bunx`:
         ```bash
-        npx typeorm-zod-codegen
+        bunx typeorm-zod-codegen
         ```
     *   Alternatively, you can add a script to your `package.json` to run the codegen:
         ```json
@@ -36,13 +41,9 @@ To further enhance developer experience and ensure perfect type safety, `typeorm
             "codegen": "typeorm-zod-codegen"
         }
         ```
-        Then, you can execute it using your package manager:
+        Then, you can execute it with Bun:
         ```bash
-        npm run codegen
-        # or
         bun run codegen
-        # or
-        yarn codegen
         ```
 3.  **Integrate into Workflow**: Add the `codegen` command to your build pipeline (e.g., pre-build script) and consider using `--watch` mode during development.
 

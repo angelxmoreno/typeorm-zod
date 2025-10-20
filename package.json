@@ -2,6 +2,7 @@
     "name": "typeorm-zod",
     "version": "0.3.0",
     "main": "dist/index.js",
+    "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "description": "Seamless integration between TypeORM entities and Zod validation using WeakMap-based metadata storage to prevent cross-entity pollution",
     "keywords": [
@@ -26,17 +27,21 @@
     },
     "files": [
         "dist",
+        "src/cli.ts",
+        "src/codegen",
+        "bin",
         "README.md",
         "LICENSE",
         "CONTRIBUTING.md",
         "CODE_OF_CONDUCT.md"
     ],
     "bin": {
-        "typeorm-zod-codegen": "./dist/cli.js"
+        "typeorm-zod-codegen": "./bin/cli.js"
     },
     "scripts": {
-        "build": "rm -rf dist && tsc && echo '#!/usr/bin/env bun' | cat - dist/cli.js > temp && mv temp dist/cli.js",
-        "check-types": "bun run codegen && tsc --project tsconfig.test.json",
+        "build": "bun run build:lib",
+        "build:lib": "tsup src/index.ts --format esm,cjs --dts --clean",
+        "check-types": "tsc --project tsconfig.test.json",
         "lint": "biome check .",
         "lint:fix": "biome check --write",
         "test": "bun test",
@@ -45,6 +50,9 @@
         "codegen": "bun run src/cli.ts"
     },
     "dependencies": {
+        "chokidar": "^4.0.3",
+        "commander": "^14.0.1",
+        "fast-glob": "^3.3.3",
         "reflect-metadata": "^0.2.2",
         "typeorm": "^0.3.26",
         "zod": "^3.25.76"
@@ -54,16 +62,15 @@
         "@commitlint/cli": "^19.8.1",
         "@commitlint/config-conventional": "^19.8.1",
         "@release-it/conventional-changelog": "^10.0.1",
+        "@swc/core": "^1.13.5",
         "@types/bun": "^1.2.22",
-        "@types/node": "^24.3.0",
-        "chokidar": "^4.0.3",
-        "commander": "^14.0.1",
-        "fast-glob": "^3.3.3",
+        "@types/node": "^24.8.1",
         "lefthook": "^1.13.1",
         "release-it": "^19.0.5",
+        "tsup": "^8.5.0",
         "typescript": "^5.9.2"
     },
     "engines": {
-        "node": ">=20"
+        "bun": ">=1.0.0"
     }
 }
