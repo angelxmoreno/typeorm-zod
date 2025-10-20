@@ -242,7 +242,12 @@ describe('Note Operations', () => {
 
 ## CLI Interface
 
-The codegen tool will be invoked via a CLI command, primarily using a configuration file for detailed settings. Command-line options can be used to override specific settings from the configuration file.
+**Requirements**: The codegen CLI requires [Bun](https://bun.sh) to be installed. Install it with:
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+The codegen tool is invoked via a CLI command, primarily using a configuration file for detailed settings. Command-line options can be used to override specific settings from the configuration file.
 
 | Option | Alias | Type | Description |
 | :--- | :--- | :--- | :--- |
@@ -256,7 +261,7 @@ The codegen's behavior is primarily controlled by a configuration file, typicall
 
 ```typescript
 // typeorm-zod.codegen.config.ts
-import { CodegenConfig } from 'typeorm-zod'; // Assuming a type definition for the config
+import type { CodegenConfig } from 'typeorm-zod';
 
 const config: CodegenConfig = {
     // Glob pattern for discovering entity files

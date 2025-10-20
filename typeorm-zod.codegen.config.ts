@@ -4,7 +4,7 @@ const config: CodegenConfig = {
     entities: './tests/helpers/entities/**/*.ts',
     output: './src/generated/test-codegen-output.ts',
     watch: false,
-    silent: false, // Keep silent for check-types
+    silent: true, // Keep silent for check-types
     naming: {
         entityToTypeName: (name) => `My${name.replace('Entity', '')}`,
     },
