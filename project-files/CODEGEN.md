@@ -256,7 +256,7 @@ The codegen's behavior is primarily controlled by a configuration file, typicall
 
 ```typescript
 // typeorm-zod.codegen.config.ts
-import { CodegenConfig } from 'typeorm-zod/codegen'; // Assuming a type definition for the config
+import { CodegenConfig } from 'typeorm-zod'; // Assuming a type definition for the config
 
 const config: CodegenConfig = {
     // Glob pattern for discovering entity files

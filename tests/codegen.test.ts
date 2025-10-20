@@ -55,8 +55,7 @@ describe('Codegen Core Logic', () => {
 
         // Basic checks for generated content structure
         expect(generatedContent).toContain('// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.');
-        expect(generatedContent).toContain('import { z } from "zod";');
-        expect(generatedContent).toContain(`import { createEntitySchemas } from './../index';`);
+        expect(generatedContent).toContain("import {createEntitySchemas} from 'typeorm-zod';");
 
         // Check for specific entity schemas and types
         expect(generatedContent).toContain(

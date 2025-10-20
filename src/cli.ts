@@ -1,6 +1,6 @@
-#!/usr/bin/env bun
-import 'reflect-metadata'; // Must be imported before any entity classes
-import { constants as FS_CONSTANTS } from 'node:fs'; // Import constants from node:fs
+import 'reflect-metadata';
+
+import { constants as FS_CONSTANTS } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as process from 'node:process';
@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 import chokidar from 'chokidar';
 import { Command } from 'commander';
 import { type CodegenConfig, CodegenConfigSchema } from './codegen/config';
-import { loadEntityClasses } from './codegen/entity-loader';
+import { type EntityClass, loadEntityClasses } from './codegen/entity-loader';
 import { resolveEntityFiles } from './codegen/entity-resolver';
 import { generateSchemasAndTypes } from './codegen/generator';
 
@@ -84,7 +84,7 @@ async function generate(config: CodegenConfig) {
     if (!config.silent) {
         console.log(
             'Loaded entity classes:',
-            entityClasses.map(([name]) => name)
+            entityClasses.map(([name]: [string, EntityClass]) => name)
         );
     }
 
@@ -161,7 +161,7 @@ async function main() {
                     return (
                         norm.includes('/node_modules/') ||
                         norm.includes('/dist/') ||
-                        /(^|[\\/])index\\.ts$/.test(p) ||
+                        /(^|[/])index\.ts$/.test(p) ||
                         path.resolve(p) === outputAbs
                     );
                 },

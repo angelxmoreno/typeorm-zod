@@ -61,7 +61,12 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny): string {
             .join('\n');
         return `{\n${properties}}`; // Removed extra newline here
     } else if (zodSchema instanceof z.ZodOptional) {
-        return `${zodSchemaToTypeScriptType(zodSchema.unwrap())} | undefined`;
+        const innerType = zodSchemaToTypeScriptType(zodSchema.unwrap());
+        // Only add | undefined if it's not already there
+        if (innerType.includes(' | undefined')) {
+            return innerType;
+        }
+        return `${innerType} | undefined`;
     } else if (zodSchema instanceof z.ZodNullable) {
         return `${zodSchemaToTypeScriptType(zodSchema.unwrap())} | null`;
     } else if (zodSchema instanceof z.ZodDefault) {
@@ -109,12 +114,9 @@ export function generateSchemasAndTypes(
 ): string {
     let output = '// THIS FILE IS AUTO-GENERATED. DO NOT EDIT.\n\n';
     output += '// @ts-ignore: `z` is used indirectly by `createEntitySchemas`\n'; // Suppress unused z warning
-    output += 'import { z } from "zod";\n';
+    output += "import {createEntitySchemas} from 'typeorm-zod';\n\n";
+
     const outputFilePath: string = config.output; // Ensure it's a string
-    const absoluteOutputDirectory = path.resolve(process.cwd(), path.dirname(outputFilePath));
-    const relativePathToSrcIndex = path.relative(absoluteOutputDirectory, path.resolve(__dirname, '../../src/index'));
-    const toPosix = (p: string) => p.replace(/\\/g, '/');
-    output += `import { createEntitySchemas } from './${toPosix(relativePathToSrcIndex)}';\n\n`;
 
     // Generate imports for entity classes
     for (const [className, _classConstructor] of entityClasses) {
