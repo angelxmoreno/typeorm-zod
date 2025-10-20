@@ -27,7 +27,8 @@
     },
     "files": [
         "dist",
-        "src",
+        "src/cli.ts",
+        "src/codegen",
         "bin",
         "README.md",
         "LICENSE",

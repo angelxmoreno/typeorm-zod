@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import * as process from 'node:process';
+import { createEntitySchemas } from 'typeorm-zod';
 import { z } from 'zod';
-import { createEntitySchemas } from '../../src'; // Adjust path as needed
 import type { CodegenConfig } from './config';
 import type { EntityClass } from './entity-loader';
 
@@ -96,7 +96,6 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny): string {
     }
 
     // Fallback for unsupported Zod types
-    console.warn('Unsupported Zod type encountered:', zodSchema);
     return 'any';
 }
 
