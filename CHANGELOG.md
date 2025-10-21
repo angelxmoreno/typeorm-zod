@@ -1,5 +1,22 @@
 # Changelog
 
+# [1.0.0](https://github.com/angelxmoreno/typeorm-zod/compare/v0.3.1...v1.0.0) (2025-10-21)
+
+
+### Bug Fixes
+
+* **codegen:** prevent infinite recursion and improve Zod internal type handling ([d6efdc1](https://github.com/angelxmoreno/typeorm-zod/commit/d6efdc18e085eac765a1741a53449346f6d6e621))
+* **codegen:** resolve type generation failure due to multiple Zod instances ([3bc7b1b](https://github.com/angelxmoreno/typeorm-zod/commit/3bc7b1b383fd53a3c444cf8356f09f172bfb6bd6))
+
+
+### BREAKING CHANGES
+
+* **codegen:** Zod is now a peer dependency. Users must have zod@^3.20.0
+installed in their project.
+
+Before: Generated types were all 'any'
+After: Generates proper types like "bio?: string | null" and "id?: string"
+
 ## [0.3.1](https://github.com/angelxmoreno/typeorm-zod/compare/v0.3.0...v0.3.1) (2025-10-20)
 
 
