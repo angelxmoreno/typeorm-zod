@@ -25,21 +25,22 @@ export interface GeneratedSchema {
  */
 interface ZodInternalDef {
     typeName?: string;
-    options?: z.ZodTypeAny[];
-    innerType?: z.ZodTypeAny;
-    type?: z.ZodTypeAny;
-    shape?: () => Record<string, z.ZodTypeAny>;
+    options?: z.ZodTypeAny[]; // For ZodUnion
+    values?: readonly string[]; // For ZodEnum
+    value?: unknown; // For ZodLiteral
+    innerType?: z.ZodTypeAny; // For ZodCatch
+    schema?: z.ZodTypeAny; // For ZodEffects (the underlying schema)
+    type?: z.ZodTypeAny; // For ZodArray
+    shape?: () => Record<string, z.ZodTypeAny>; // For ZodObject
 }
 
 interface ZodInternal extends z.ZodTypeAny {
     _def: ZodInternalDef;
-    shape?: Record<string, z.ZodTypeAny>;
-    options?: string[] | z.ZodTypeAny[];
-    element?: z.ZodTypeAny;
-    value?: unknown;
-    unwrap?: () => z.ZodTypeAny;
-    removeDefault?: () => z.ZodTypeAny;
-    innerType?: () => z.ZodTypeAny;
+    shape?: Record<string, z.ZodTypeAny>; // ZodObject shorthand
+    element?: z.ZodTypeAny; // ZodArray shorthand
+    unwrap?: () => z.ZodTypeAny; // ZodOptional, ZodNullable
+    removeDefault?: () => z.ZodTypeAny; // ZodDefault
+    innerType?: () => z.ZodTypeAny; // ZodEffects
 }
 
 /**
@@ -74,7 +75,10 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny, depth = 0): string {
             .map((key) => {
                 const propSchema = shape[key];
                 if (!propSchema) return '';
-                const isOptional = propSchema.isOptional();
+                const propInternal = propSchema as ZodInternal;
+                // Check for optional/nullable by inspecting _def.typeName instead of isOptional()
+                // to avoid issues with multiple Zod instances
+                const isOptional = propInternal._def?.typeName === 'ZodOptional';
                 const typeString = zodSchemaToTypeScriptType(propSchema, depth + 1);
                 return `${key}${isOptional ? '?' : ''}: ${typeString};`;
             })
@@ -99,12 +103,14 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny, depth = 0): string {
     } else if (typeName === 'ZodDefault') {
         return zodSchemaToTypeScriptType(internal.removeDefault?.() ?? zodSchema);
     } else if (typeName === 'ZodEnum') {
-        const opts = internal.options as string[] | undefined;
-        return opts?.map((opt: string) => `'${opt}'`).join(' | ') ?? 'string';
+        const values = internal._def.values ?? [];
+        return values.map((val) => `'${val}'`).join(' | ') || 'string';
     } else if (typeName === 'ZodLiteral') {
-        return typeof internal.value === 'string' ? `'${internal.value}'` : String(internal.value);
+        const value = internal._def.value;
+        return typeof value === 'string' ? `'${value}'` : String(value);
     } else if (typeName === 'ZodUnion') {
-        const opts = (internal._def?.options ?? internal.options ?? []) as z.ZodTypeAny[];
+        // ZodUnion only stores options in _def.options, not at top level
+        const opts = (internal._def?.options ?? []) as z.ZodTypeAny[];
         return opts.map((opt) => zodSchemaToTypeScriptType(opt)).join(' | ');
     } else if (typeName === 'ZodAny') {
         return 'any';
@@ -117,8 +123,9 @@ function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny, depth = 0): string {
     } else if (typeName === 'ZodCatch') {
         return zodSchemaToTypeScriptType(internal._def.innerType as z.ZodTypeAny);
     } else if (typeName === 'ZodEffects') {
-        // Handle transforms/refinements - get the underlying type
-        return zodSchemaToTypeScriptType(internal.innerType?.() ?? zodSchema);
+        // Handle transforms/refinements - unwrap to underlying schema
+        const underlying = internal._def.schema;
+        return underlying ? zodSchemaToTypeScriptType(underlying, depth) : 'any';
     }
 
     // Fallback for unsupported Zod types
