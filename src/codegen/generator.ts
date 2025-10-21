@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import * as process from 'node:process';
 import { createEntitySchemas } from 'typeorm-zod';
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { CodegenConfig } from './config';
 import type { EntityClass } from './entity-loader';
 
@@ -18,7 +18,28 @@ export interface GeneratedSchema {
     validateUpdateFnName: string;
     validatePatchFnName: string;
     validateQueryFnName: string;
-    // Add other generated names as needed
+}
+
+/**
+ * Internal Zod schema structure for accessing _def properties
+ */
+interface ZodInternalDef {
+    typeName?: string;
+    options?: z.ZodTypeAny[];
+    innerType?: z.ZodTypeAny;
+    type?: z.ZodTypeAny;
+    shape?: () => Record<string, z.ZodTypeAny>;
+}
+
+interface ZodInternal extends z.ZodTypeAny {
+    _def: ZodInternalDef;
+    shape?: Record<string, z.ZodTypeAny>;
+    options?: string[] | z.ZodTypeAny[];
+    element?: z.ZodTypeAny;
+    value?: unknown;
+    unwrap?: () => z.ZodTypeAny;
+    removeDefault?: () => z.ZodTypeAny;
+    innerType?: () => z.ZodTypeAny;
 }
 
 /**
@@ -27,72 +48,77 @@ export interface GeneratedSchema {
  * @param zodSchema The Zod schema to convert.
  * @returns A string representing the TypeScript type.
  */
-function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny): string {
-    if (zodSchema instanceof z.ZodString) {
+function zodSchemaToTypeScriptType(zodSchema: z.ZodTypeAny, depth = 0): string {
+    // Use _def.typeName instead of instanceof to avoid issues with multiple Zod instances
+    const internal = zodSchema as ZodInternal;
+    const typeName = internal._def?.typeName;
+
+    if (typeName === 'ZodString') {
         return 'string';
-    } else if (zodSchema instanceof z.ZodNumber) {
+    } else if (typeName === 'ZodNumber') {
         return 'number';
-    } else if (zodSchema instanceof z.ZodBoolean) {
+    } else if (typeName === 'ZodBoolean') {
         return 'boolean';
-    } else if (zodSchema instanceof z.ZodDate) {
+    } else if (typeName === 'ZodDate') {
         return 'Date';
-    } else if (zodSchema instanceof z.ZodArray) {
-        // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod properties
-        const el = (zodSchema as any)?._def?.type ?? (zodSchema as any)?.element;
+    } else if (typeName === 'ZodArray') {
+        const el = internal._def?.type ?? internal.element;
         return `Array<${zodSchemaToTypeScriptType(el as z.ZodTypeAny)}>`;
-    } else if (zodSchema instanceof z.ZodObject) {
-        // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod properties
-        const shape = (zodSchema as any).shape ?? (zodSchema as any)._def?.shape?.();
+    } else if (typeName === 'ZodObject') {
+        const shape = internal.shape ?? internal._def?.shape?.();
+        if (!shape) {
+            console.warn('ZodObject has no shape at depth', depth);
+            return 'any';
+        }
         const properties = Object.keys(shape)
             .map((key) => {
                 const propSchema = shape[key];
+                if (!propSchema) return '';
                 const isOptional = propSchema.isOptional();
-                const isNullable = propSchema.isNullable();
-                let typeString = zodSchemaToTypeScriptType(propSchema);
-
-                if (isOptional && !typeString.endsWith(' | undefined')) {
-                    typeString += ' | undefined';
-                }
-                if (isNullable && !typeString.endsWith(' | null')) {
-                    typeString += ' | null';
-                }
+                const typeString = zodSchemaToTypeScriptType(propSchema, depth + 1);
                 return `${key}${isOptional ? '?' : ''}: ${typeString};`;
             })
+            .filter(Boolean)
             .join('\n');
-        return `{\n${properties}}`; // Removed extra newline here
-    } else if (zodSchema instanceof z.ZodOptional) {
-        const innerType = zodSchemaToTypeScriptType(zodSchema.unwrap());
-        // Only add | undefined if it's not already there
+        return `{\n${properties}}`;
+    } else if (typeName === 'ZodOptional') {
+        const innerType = zodSchemaToTypeScriptType(internal.unwrap?.() ?? zodSchema, depth + 1);
+        // Don't add | undefined if it's already there
         if (innerType.includes(' | undefined')) {
             return innerType;
         }
-        return `${innerType} | undefined`;
-    } else if (zodSchema instanceof z.ZodNullable) {
-        return `${zodSchemaToTypeScriptType(zodSchema.unwrap())} | null`;
-    } else if (zodSchema instanceof z.ZodDefault) {
-        return zodSchemaToTypeScriptType(zodSchema.removeDefault());
-    } else if (zodSchema instanceof z.ZodEnum) {
-        return zodSchema.options.map((opt: string) => `'${opt}'`).join(' | ');
-    } else if (zodSchema instanceof z.ZodLiteral) {
-        return typeof zodSchema.value === 'string' ? `'${zodSchema.value}'` : String(zodSchema.value);
-    } else if (zodSchema instanceof z.ZodUnion) {
-        // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod properties
-        const opts: z.ZodTypeAny[] = (zodSchema as any)?._def?.options ?? (zodSchema as any)?.options ?? [];
+        // If we're in an object property context (depth > 0), the '?' will handle undefined
+        // so we don't need to add it to the type
+        return depth > 0 ? innerType : `${innerType} | undefined`;
+    } else if (typeName === 'ZodNullable') {
+        const innerType = zodSchemaToTypeScriptType(internal.unwrap?.() ?? zodSchema, depth + 1);
+        if (innerType.includes(' | null')) {
+            return innerType;
+        }
+        return `${innerType} | null`;
+    } else if (typeName === 'ZodDefault') {
+        return zodSchemaToTypeScriptType(internal.removeDefault?.() ?? zodSchema);
+    } else if (typeName === 'ZodEnum') {
+        const opts = internal.options as string[] | undefined;
+        return opts?.map((opt: string) => `'${opt}'`).join(' | ') ?? 'string';
+    } else if (typeName === 'ZodLiteral') {
+        return typeof internal.value === 'string' ? `'${internal.value}'` : String(internal.value);
+    } else if (typeName === 'ZodUnion') {
+        const opts = (internal._def?.options ?? internal.options ?? []) as z.ZodTypeAny[];
         return opts.map((opt) => zodSchemaToTypeScriptType(opt)).join(' | ');
-    } else if (zodSchema instanceof z.ZodAny) {
+    } else if (typeName === 'ZodAny') {
         return 'any';
-    } else if (zodSchema instanceof z.ZodUnknown) {
+    } else if (typeName === 'ZodUnknown') {
         return 'unknown';
-    } else if (zodSchema instanceof z.ZodNever) {
+    } else if (typeName === 'ZodNever') {
         return 'never';
-    } else if (zodSchema instanceof z.ZodVoid) {
+    } else if (typeName === 'ZodVoid') {
         return 'void';
-    } else if (zodSchema instanceof z.ZodCatch) {
-        // ZodCatch does not have innerType, it has _def.innerType
-        return zodSchemaToTypeScriptType(zodSchema._def.innerType as z.ZodTypeAny); // Access _def.innerType
-    } else if (zodSchema instanceof z.ZodEffects) {
+    } else if (typeName === 'ZodCatch') {
+        return zodSchemaToTypeScriptType(internal._def.innerType as z.ZodTypeAny);
+    } else if (typeName === 'ZodEffects') {
         // Handle transforms/refinements - get the underlying type
-        return zodSchemaToTypeScriptType(zodSchema.innerType());
+        return zodSchemaToTypeScriptType(internal.innerType?.() ?? zodSchema);
     }
 
     // Fallback for unsupported Zod types
@@ -175,6 +201,12 @@ export function generateSchemasAndTypes(
 
         // Generate TypeScript types by inspecting the Zod schemas
         const entitySchemas = createEntitySchemas(classConstructor, overrides);
+
+        // Debug: Check if schemas were created
+        if (!config.silent) {
+            console.log(`Generating types for ${className}:`);
+            console.log(`  Schema keys:`, Object.keys(entitySchemas.full.shape || {}));
+        }
 
         output += `export type ${fullTypeName} = ${zodSchemaToTypeScriptType(entitySchemas.full)};\n`;
         output += `export type ${createDtoName} = ${zodSchemaToTypeScriptType(entitySchemas.create)};\n`;

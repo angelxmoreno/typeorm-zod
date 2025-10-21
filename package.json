@@ -54,8 +54,10 @@
         "commander": "^14.0.1",
         "fast-glob": "^3.3.3",
         "reflect-metadata": "^0.2.2",
-        "typeorm": "^0.3.26",
-        "zod": "^3.25.76"
+        "typeorm": "^0.3.26"
+    },
+    "peerDependencies": {
+        "zod": "^3.20.0"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.2.4",
@@ -68,7 +70,8 @@
         "lefthook": "^1.13.1",
         "release-it": "^19.0.5",
         "tsup": "^8.5.0",
-        "typescript": "^5.9.2"
+        "typescript": "^5.9.2",
+        "zod": "^3.25.76"
     },
     "engines": {
         "bun": ">=1.0.0"
